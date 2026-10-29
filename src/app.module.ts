@@ -3,15 +3,14 @@ import { Module } from '@nestjs/common';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { MongooseModule } from '@nestjs/mongoose';
 import { ScheduleModule } from '@nestjs/schedule';
-import { IntentsBitField } from 'discord.js';
-import { NecordModule } from 'necord';
 import { validateEnv } from './config/env';
 import { BankModule } from './jobs/bank/bank.module';
 import { PlanModule } from './jobs/plan/plan.module';
 import { SmmModule } from './jobs/smm/smm.module';
+import { UsdtModule } from './jobs/usdt/usdt.module';
 import { ReelsModule } from './modules/reels/reels.module';
 import { TasksModule } from './modules/tasks/tasks.module';
-import { DiscordModule } from './providers/discord/discord.module';
+import { TelegramModule } from './providers/telegram/telegram.module';
 
 @Module({
     imports: [
@@ -24,18 +23,11 @@ import { DiscordModule } from './providers/discord/discord.module';
                 autoIndex: true,
             }),
         }),
-        NecordModule.forRootAsync({
-            inject: [ConfigService],
-            useFactory: (config: ConfigService) => ({
-                token: config.getOrThrow<string>('DISCORD_BOT_TOKEN'),
-                intents: [IntentsBitField.Flags.Guilds],
-                development: [config.get<string>('DISCORD_DEVELOPMENT_GUILD_ID')].filter(Boolean),
-            }),
-        }),
         HttpModule.register({ timeout: 10000, maxRedirects: 5 }),
         ScheduleModule.forRoot(),
-        DiscordModule,
+        TelegramModule,
         BankModule,
+        UsdtModule,
         SmmModule,
         PlanModule,
         TasksModule,

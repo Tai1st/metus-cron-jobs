@@ -10,7 +10,26 @@ async function bootstrap() {
     const config = app.get(ConfigService);
     const logger = new Logger('Bootstrap');
 
-    // API này chỉ được gọi server-to-server từ BE nên không mở CORS cho trình duyệt.
+    // Phần lớn API chỉ được BE gọi server-to-server nên không mở CORS. Riêng /api/usdt cho FE gọi thẳng,
+    // chỉ với các origin liệt kê trong USDT_CORS_ORIGINS.
+    const usdtOrigins = (config.get<string>('USDT_CORS_ORIGINS') ?? '')
+        .split(',')
+        .map((origin) => origin.trim())
+        .filter(Boolean);
+    app.use('/api/usdt', (req, res, next) => {
+        const origin = req.headers.origin;
+        if (origin && usdtOrigins.includes(origin)) {
+            res.setHeader('Access-Control-Allow-Origin', origin);
+            res.setHeader('Vary', 'Origin');
+            res.setHeader('Access-Control-Allow-Methods', 'GET, OPTIONS');
+            res.setHeader('Access-Control-Allow-Headers', 'Authorization, Content-Type');
+        }
+        if (req.method === 'OPTIONS') {
+            return res.sendStatus(204);
+        }
+        next();
+    });
+
     app.useGlobalFilters(new AllExceptionFilter());
     app.useGlobalPipes(new ValidationPipe({ whitelist: true }));
 

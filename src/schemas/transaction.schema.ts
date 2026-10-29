@@ -20,6 +20,10 @@ export class Transaction extends BaseSchema {
     @Prop()
     transactionNumber: number;
 
+    // Mã giao dịch on-chain (nạp USDT); giao dịch ngân hàng dùng transactionNumber.
+    @Prop()
+    txId?: string;
+
     @Prop()
     description: string;
 

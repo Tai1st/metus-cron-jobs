@@ -1,5 +1,5 @@
 import { envFlag, getErrorMessage, SingleFlight } from '@/common/utils';
-import { DiscordProvider } from '@/providers/discord/discord.provider';
+import { TelegramProvider } from '@/providers/telegram/telegram.provider';
 import { CustomerPlan, Plan, SubscribedApp } from '@/schemas';
 import { HttpService } from '@nestjs/axios';
 import { Injectable, Logger } from '@nestjs/common';
@@ -17,7 +17,7 @@ export class PlanService {
     private readonly flight = new SingleFlight();
 
     constructor(
-        private readonly discord: DiscordProvider,
+        private readonly telegram: TelegramProvider,
         private readonly http: HttpService,
         @InjectModel(Plan.name) private readonly planModel: Model<Plan>,
         @InjectModel(CustomerPlan.name) private readonly customerPlanModel: Model<CustomerPlan>,
@@ -53,7 +53,7 @@ export class PlanService {
             }
         } catch (error) {
             this.logger.error(`CancelAutoComment error: ${getErrorMessage(error)}`);
-            await this.discord.sendToError(`[PlanService] CancelAutoComment error: ${getErrorMessage(error)}`);
+            await this.telegram.sendToError(`[PlanService] CancelAutoComment error: ${getErrorMessage(error)}`);
         }
         this.logger.debug('CancelAutoComment finished');
     }
@@ -74,7 +74,7 @@ export class PlanService {
             // Lỗi tạm thời: giữ status=true để ngày mai thử lại, không bỏ sót.
             done = FB_PERMANENT_ERROR_CODES.includes(code);
             this.logger.error(`[${pageId}] Cancel page failure: ${getErrorMessage(error)}`);
-            await this.discord.sendToError(`[${pageId}] ${getErrorMessage(error)}`);
+            await this.telegram.sendToError(`[${pageId}] ${getErrorMessage(error)}`);
         }
         if (done) {
             await this.subscribedAppModel.updateOne({ _id: app._id }, { $set: { status: false } });

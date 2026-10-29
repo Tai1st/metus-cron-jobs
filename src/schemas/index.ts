@@ -16,3 +16,4 @@ export * from './service.schema';
 export * from './transaction.schema';
 export * from './subscribed-app.schema';
 export * from './facebook-account.schema';
+export * from './usdt-transaction.schema';

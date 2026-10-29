@@ -22,6 +22,8 @@ export enum CronName {
 export enum SettingKey {
     BANK_ACCOUNT = 'BANK_ACCOUNT',
     BANK_INFO = 'BANK_INFO',
+    // { rate: VND cho 1 USDT, minAmount: USDT tối thiểu mỗi lần nạp }
+    USDT_INFO = 'USDT_INFO',
 }
 
 export enum TransactionStatus {

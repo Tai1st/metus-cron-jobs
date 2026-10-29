@@ -1,6 +1,6 @@
 import { envFlag, getErrorMessage, SingleFlight } from '@/common/utils';
 import { SettingKey } from '@/enums/common.enum';
-import { DiscordProvider } from '@/providers/discord/discord.provider';
+import { TelegramProvider } from '@/providers/telegram/telegram.provider';
 import { Setting } from '@/schemas';
 import { HttpService } from '@nestjs/axios';
 import { Injectable, Logger } from '@nestjs/common';
@@ -35,7 +35,7 @@ export class Web2mBankJob {
 
     constructor(
         private readonly http: HttpService,
-        private readonly discord: DiscordProvider,
+        private readonly telegram: TelegramProvider,
         private readonly ledger: DepositLedgerService,
         private readonly deposit: DepositService,
         @InjectModel(Setting.name) private readonly settingModel: Model<Setting>,
@@ -72,7 +72,7 @@ export class Web2mBankJob {
             // Không in nguyên object lỗi: URL Web2M chứa token.
             const message = `[Web2mBankJob] CheckTransaction error: ${getErrorMessage(error)}`;
             this.logger.error(message);
-            await this.discord.sendToError(message);
+            await this.telegram.sendToError(message);
         }
     }
 
@@ -87,7 +87,7 @@ export class Web2mBankJob {
             } catch (error) {
                 const message = `🚨 Lỗi khi cộng tiền giao dịch ${tx.transactionNumber} (${tx.amount}đ, "${tx.description}"): ${getErrorMessage(error)}. Kiểm tra và xử lý thủ công.`;
                 this.logger.error(message);
-                await this.discord.sendToTransaction(message);
+                await this.telegram.sendToTransaction(message);
             }
         } catch (error) {
             this.logger.error(`Không ghi nhận được giao dịch ${tx.transactionNumber}: ${getErrorMessage(error)}`);

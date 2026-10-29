@@ -1,7 +1,7 @@
 import { USD_RATE } from '@/common/constants';
 import { customRound, envFlag, getErrorMessage, SingleFlight } from '@/common/utils';
 import { OrderStatus } from '@/enums/order.enum';
-import { DiscordProvider } from '@/providers/discord/discord.provider';
+import { TelegramProvider } from '@/providers/telegram/telegram.provider';
 import {
     Customer,
     CustomerDocument,
@@ -42,7 +42,7 @@ export class SmmService {
 
     constructor(
         private readonly http: HttpService,
-        private readonly discord: DiscordProvider,
+        private readonly telegram: TelegramProvider,
         @InjectModel(SmmPanelPartner.name) private readonly partnerModel: Model<SmmPanelPartnerDocument>,
         @InjectModel(ServiceServer.name) private readonly serverModel: Model<ServiceServerDocument>,
         @InjectModel(Order.name) private readonly orderModel: Model<OrderDocument>,
@@ -67,7 +67,7 @@ export class SmmService {
             const data = await this.callPanel(partner, { action: 'services' });
             // Chỉ tin dữ liệu khi panel trả về danh sách; nếu không thì KHÔNG đụng tới server nào.
             if (!Array.isArray(data)) {
-                await this.discord.sendToError(
+                await this.telegram.sendToError(
                     `🚱 Lỗi check giá smm: [${partner.name}] ${partner.link} ${JSON.stringify(data)}`,
                 );
                 return;
@@ -85,7 +85,7 @@ export class SmmService {
                 if (!service) {
                     const message = `🚱 [${server.id}] Không tìm thấy service ${server.smmServer} trong dữ liệu trả về từ smm panel [${partner.name}] Link: ${partner.link}`;
                     this.logger.error(message);
-                    await this.discord.sendToError(message);
+                    await this.telegram.sendToError(message);
                     operations.push({
                         updateOne: {
                             filter: { _id: server._id },
@@ -104,7 +104,7 @@ export class SmmService {
                 if (Math.abs((server.smmPrice ?? 0) - rate) > PRICE_EPSILON) {
                     const message = `⚠️ Có thay đổi về giá [${partner.name}] Link: ${partner.link}. \n- Giá smm cũ: ${server.smmPrice} \n- Giá smm mới: ${rate} \n- smmServer: ${server.smmServer} \n- Giá bán mới: ${price} \n- Server: ${server.serverNumber} \n- Name: ${server.name}`;
                     this.logger.debug(message);
-                    await this.discord.sendToSMM(message);
+                    await this.telegram.sendToSMM(message);
                 }
 
                 operations.push({
@@ -120,7 +120,7 @@ export class SmmService {
             }
         } catch (error) {
             this.logger.error(`[${partner.name}] Lỗi khi lấy dữ liệu từ smm panel: ${getErrorMessage(error)}`);
-            await this.discord.sendToError(
+            await this.telegram.sendToError(
                 `🚱 Lỗi check giá smm::: [${partner.name}] ${partner.link} ${getErrorMessage(error)}`,
             );
         }
@@ -225,7 +225,7 @@ export class SmmService {
         for (const order of canceled) {
             try {
                 const customer = order.customer;
-                await this.discord.sendToSMM(
+                await this.telegram.sendToSMM(
                     `⚠️ Đơn hàng ${order.id} đã bị hủy \nPartner: ${partner.link} \nsmmOrderId: ${order.smmOrderId} \nService: ${order.service?.name} \nsmmServer: ${order.server?.smmServer} \nLink: ${order.link} \nSố lượng: ${order.quantity} \nGiá: ${order.price} \nTổng thanh toán: ${order.totalPayment} \nEmail: ${customer?.email} \nSố dư cũ: ${customer?.balance} \n- smmSố dư cũ: ${oldBalance} \n- smmSố dư mới: ${newBalance}`,
                 );
 
@@ -237,7 +237,7 @@ export class SmmService {
 
                 if (!refundable) {
                     await this.orderModel.updateOne({ _id: order._id }, { $set: update });
-                    await this.discord.sendToSMM(
+                    await this.telegram.sendToSMM(
                         `🚨 Đơn ${order.id} bị hủy nhưng số dư panel không tăng, CHƯA hoàn ${order.totalPayment}đ cho ${customer?.email}. Cần kiểm tra và hoàn tay nếu hợp lệ.`,
                     );
                     continue;
@@ -255,12 +255,12 @@ export class SmmService {
                 const before = await this.customerModel.findByIdAndUpdate(customer._id, {
                     $inc: { balance: order.totalPayment },
                 });
-                await this.discord.sendToSMM(
+                await this.telegram.sendToSMM(
                     `⚠️ Đã hoàn ${order.totalPayment}đ cho ${customer.email} do đơn hàng ${order.id} bị hủy \n- Số dư cũ: ${before?.balance} \n- Số dư mới: ${(before?.balance ?? 0) + order.totalPayment}`,
                 );
             } catch (error) {
                 this.logger.error(`[${partner.name}] Xử lý đơn hủy ${order.id} lỗi: ${getErrorMessage(error)}`);
-                await this.discord.sendToError(`🚨 Lỗi khi xử lý đơn hủy ${order.id}: ${getErrorMessage(error)}`);
+                await this.telegram.sendToError(`🚨 Lỗi khi xử lý đơn hủy ${order.id}: ${getErrorMessage(error)}`);
             }
         }
     }

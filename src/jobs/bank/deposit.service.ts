@@ -2,7 +2,7 @@ import { BANK_CODE, REFERRAL_RATE } from '@/common/constants';
 import { escapeRegExp } from '@/common/utils';
 import { CustomerActivity, SettingKey, TransactionStatus, TransactionType } from '@/enums/common.enum';
 import { CustomerPartnerLevel } from '@/enums/customer.enum';
-import { DiscordProvider } from '@/providers/discord/discord.provider';
+import { TelegramProvider } from '@/providers/telegram/telegram.provider';
 import { Action, Customer, CustomerDocument, Setting, Site, Transaction } from '@/schemas';
 import { Injectable, Logger } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
@@ -22,7 +22,7 @@ export class DepositService {
     private readonly logger = new Logger(DepositService.name);
 
     constructor(
-        private readonly discord: DiscordProvider,
+        private readonly telegram: TelegramProvider,
         @InjectModel(Customer.name) private readonly customerModel: Model<CustomerDocument>,
         @InjectModel(Action.name) private readonly actionModel: Model<Action>,
         @InjectModel(Setting.name) private readonly settingModel: Model<Setting>,
@@ -172,6 +172,6 @@ export class DepositService {
 
     private async notify(text: string, level: 'warn' | 'error' = 'warn'): Promise<void> {
         this.logger[level](text);
-        await this.discord.sendToTransaction(text);
+        await this.telegram.sendToTransaction(text);
     }
 }

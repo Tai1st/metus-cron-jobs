@@ -1,4 +1,4 @@
-const REQUIRED = ['DATABASE_URI', 'DATABASE_NAME', 'JWT_CLIENT_SECRET_KEY', 'DISCORD_BOT_TOKEN'];
+const REQUIRED = ['DATABASE_URI', 'DATABASE_NAME', 'JWT_CLIENT_SECRET_KEY', 'TELEGRAM_BOT_TOKEN'];
 
 export function validateEnv(config: Record<string, any>): Record<string, any> {
     const missing = REQUIRED.filter((key) => !config[key]);

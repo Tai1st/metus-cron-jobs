@@ -43,6 +43,8 @@ export const getErrorMessage = (error: any): string => {
         fb?.error_user_title ||
         fb?.message ||
         error?.response?.data?.message ||
+        error?.response?.data?.msg ||
+        error?.response?.data?.description ||
         error?.message ||
         'Unknown error'
     );
